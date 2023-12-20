@@ -1,9 +1,10 @@
 import re
 import json 
+import socket
 import argparse
 import requests
 from termcolor import colored
-import bs4
+from bs4 import BeautifulSoup
 
 
 def print_help():
@@ -25,6 +26,57 @@ def print_help():
           '\n|   -r With html report.[Not avaliable]                               |'
           '\n|   -c Report will exporting in to console                            |'
           '\n|---------------------------------------------------------------------|')
+
+def check_responce(response):
+    if response.status_code == requests.codes.ok:
+        #print(response.text)
+        return True
+    else:
+        print("Error:", response.status_code, response.text)
+        return False
+    
+
+def convert(lst):
+   res_dict = {}
+   for i in range(0, len(lst), 2):
+       res_dict[lst[i]] = lst[i + 1]
+   return res_dict
+
+
+def get_ip(url):
+    response = socket.getaddrinfo(url, 80)
+    response = convert(response)
+
+    for value, data in response.items():
+        data[4][0]
+    
+    return data[4][0]
+
+def check_whois(address):
+    country = ''
+    key_api_ninjas = "ANncHPjeqfgl2WLESBOoHQ==ADqOQr20Sf6C2NEt"
+    api_url = 'https://api.api-ninjas.com/v1/whois?domain={}'.format(address)
+    response = requests.get(api_url, headers={'X-Api-Key': key_api_ninjas})
+
+    if check_responce(response):
+        answer = json.loads(response.text)
+        if "name_servers" in answer and isinstance(answer["name_servers"], list):
+            name_servers_list = answer["name_servers"]
+            for name_server in name_servers_list:
+                print(name_server)
+        if "registrant_country" in answer:
+            country = answer['registrant_country']
+            print(country)
+
+
+    ip_adresses = get_ip(address)
+    print(ip_adresses)
+
+    url = "http://ipwho.is/" + str(address)
+    response = requests.get(url)
+    if check_responce(response):
+        print(response.json())
+
 
 def check_vt(address):
     print(colored("SEARCHING IN VirusTotal FOR: " + address, 'blue'))
@@ -81,7 +133,16 @@ def check_abuse(address):
     return False
 
 def generate_report(address):
-    shodan_api = ""
+    with open("index.html", 'r', encoding='utf-8') as file:
+        html_content = file.read()
+    
+    soup = BeautifulSoup(html_content, 'html.parser')
+    target_element = soup.find(id='hname')
+    new_element = BeautifulSoup("Tested ip:" + str(address), 'html.parser')
+    target_element.append(new_element)
+    
+    with open("index_new.html", 'w', encoding='utf-8') as file:
+        file.write(soup.prettify())
 
 def from_file(filename):
     if isfromfile:
@@ -118,7 +179,14 @@ def arguments(parser):
 
     return parser.parse_args()
 
+def validate_address(address):
+    ip = re.compile(r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}')
+    url = re.compile(r'')
+
+
 def main():
+
+
     mode = 0
     isfromfile = False
     address = ''
@@ -126,7 +194,10 @@ def main():
     report_mode = 0
     parser = argparse.ArgumentParser(description='IP & URL scanner!')
     args = arguments(parser)
-
+    
+    check_whois(args.i)
+    #generate_report(args.i)
+    return
 
     if args.a:
         check_abuse(args.i)
