@@ -54,7 +54,7 @@ def get_ip(url):
 
 def check_whois(address):
     country = ''
-    key_api_ninjas = "ANncHPjeqfgl2WLESBOoHQ==ADqOQr20Sf6C2NEt"
+    key_api_ninjas = "ninja-key"
     api_url = 'https://api.api-ninjas.com/v1/whois?domain={}'.format(address)
     response = requests.get(api_url, headers={'X-Api-Key': key_api_ninjas})
 
@@ -80,7 +80,7 @@ def check_whois(address):
 
 def check_vt(address):
     print(colored("SEARCHING IN VirusTotal FOR: " + address, 'blue'))
-    header = {'x-apikey': '8aa6e2eb012a25ab90f71b0d15ec3d1e4557acdd91d8c4c161394db421e1e156',}
+    header = {'x-apikey': 'vt_api',}
     url = f"https://www.virustotal.com/api/v3/ip_addresses/{address}"
 
 
@@ -115,7 +115,7 @@ def check_vt(address):
 def check_abuse(address):
     print(colored("SEARCHING IN ABUSEIPDB FOR: " + address, 'blue'))
     url = f"https://api.abuseipdb.com/api/v2/check"
-    headers = { "Key": "74ae787b1b0b2dc6d46cfa97aa2b44fea8628475f37069fae84763216685cbfe35a10380973e7ea0", # Замените YOUR_API_KEY на ваш ключ API от AbuseIPDB
+    headers = { "Key": "abuse api", # Замените YOUR_API_KEY на ваш ключ API от AbuseIPDB
         "Accept": "application/json"}
     payload = {
         "ipAddress": address,
@@ -195,30 +195,22 @@ def main():
     parser = argparse.ArgumentParser(description='IP & URL scanner!')
     args = arguments(parser)
     
-    check_whois(args.i)
+    #check_whois(args.i)
     #generate_report(args.i)
-    return
+    #return
 
-    if args.a:
-        check_abuse(args.i)
-
-    if args.v:
-        check_vt(args.i)
-        print(args.v)
     if args.f:
         check_vt(args.i)
+        check_abuse(args.i)  
+    elif args.a:
         check_abuse(args.i)
+    elif args.v:
+        check_vt(args.i)
+        print(args.v)
         
     if args.report:
         print(args.report)
     
-        
-
-    
-
-   
-
- 
 
 if __name__ == '__main__':
     main()
